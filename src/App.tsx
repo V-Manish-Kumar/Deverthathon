@@ -21,16 +21,16 @@ function reportError(category: string, error: unknown) {
     timestamp: new Date().toISOString(),
   })
 
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon('/api/log-error', new Blob([payload], { type: 'application/json' }))
-  } else {
-    void fetch('/api/log-error', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: payload,
-      keepalive: true,
-    })
-  }
+  void fetch('/api/log-error', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: payload,
+    keepalive: true,
+  }).catch(() => {
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/log-error', new Blob([payload], { type: 'application/json' }))
+    }
+  })
 }
 
 function App() {
@@ -75,9 +75,14 @@ function App() {
 
   const triggerApiError = async () => {
     addEvent({ label: 'API request started', detail: 'Calling /api/error for a 500 response.', tone: 'warning' })
-    const response = await fetch('/api/error')
-    if (!response.ok) {
-      addEvent({ label: 'API 500 received', detail: `Server responded with ${response.status}.`, tone: 'danger' })
+    try {
+      const response = await fetch('/api/error')
+      if (!response.ok) {
+        addEvent({ label: 'API 500 received', detail: `Server responded with ${response.status}.`, tone: 'danger' })
+        reportError('api.failure', new Error(`Serverless API responded with HTTP ${response.status}`))
+      }
+    } catch (err) {
+      reportError('api.network_error', err)
     }
   }
 
