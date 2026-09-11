@@ -60,10 +60,14 @@ function App() {
   const addEvent = (event: EventItem) => setEvents((current) => [event, ...current])
 
   const triggerClickError = () => {
-    const error = new Error('Intentional click exception: button handler test')
-    addEvent({ label: 'Click exception', detail: 'Error thrown from button handler.', tone: 'danger' })
-    reportError('click.exception', error)
-    throw error
+    try {
+      const error = new Error('Intentional click exception: button handler test')
+      addEvent({ label: 'Click exception', detail: 'Error thrown from button handler.', tone: 'danger' })
+      reportError('click.exception', error)
+      throw error
+    } catch (error) {
+      reportError('click.exception.caught', error)
+    }
   }
 
   const triggerRejectedPromise = () => {
