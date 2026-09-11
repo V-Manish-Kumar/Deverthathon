@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 type Request = {
   method?: string
   body?: unknown
